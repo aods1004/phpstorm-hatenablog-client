@@ -12,6 +12,24 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class FetchHatenaBlogEntriesCommand extends Command
 {
+
+    /** @var string|null */
+    protected $user;
+    /** @var string|null */
+    protected $password;
+
+    /**
+     * FetchHatenaBlogEntriesCommand constructor.
+     * @param null|string $user
+     * @param null|string $password
+     */
+    public function __construct(?string $user = null, ?string $password = null)
+    {
+        $this->user = $user;
+        $this->password = $password;
+        parent::__construct();
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -23,12 +41,10 @@ class FetchHatenaBlogEntriesCommand extends Command
     }
 
     /**
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     * @return int|null|void
+     * {@inheritdoc}
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        echo 'do something.' . PHP_EOL;
+        var_dump($this->password, $this->user);
     }
 }
