@@ -1,0 +1,8 @@
+eight_points_guzzle:
+    clients:
+        hatena_blog_atom_pub_api:
+            base_url: "https://blog.hatena.ne.jp"
+            plugin:
+                wsse:
+                    username:   '%env(HATENA_BLOG_API_USER)%'
+                    password:   '%env(HATENA_BLOG_API_SECRET)%'

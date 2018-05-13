@@ -29,7 +29,11 @@ class Kernel extends BaseKernel
     {
         $contents = require $this->getProjectDir().'/config/bundles.php';
         foreach ($contents as $class => $envs) {
-            if (isset($envs['all']) || isset($envs[$this->environment])) {
+            if ($class === \EightPoints\Bundle\GuzzleBundle\EightPointsGuzzleBundle::class) {
+                yield new $class([
+                    new \Gregurco\Bundle\GuzzleBundleWssePlugin\GuzzleBundleWssePlugin(),
+                ]);
+            } else {
                 yield new $class();
             }
         }

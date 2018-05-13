@@ -1,8 +1,8 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
-    app.hatena_blog_api_secret: '%env(HATENA_BLOG_API_SECRET)%',
-    app.hatena_blog_api_user: '%env(HATENA_BLOG_API_USER)%',
+    app.hatena_blog_api_username: '%env(HATENA_BLOG_API_USER)%'
+    app.hatena_blog_api_blog_id: '%env(HATENA_BLOG_API_BLOG_ID)%'
 
 services:
     # default configuration for services in *this* file
@@ -30,4 +30,8 @@ services:
 
     fetch_hatena_blog_entries:
         class: App\Command\FetchHatenaBlogEntriesCommand
-        arguments: ['%app.hatena_blog_api_user%', '%app.hatena_blog_api_secret%']
+        arguments:
+          - '@eight_points_guzzle.client.hatena_blog_atom_pub_api'
+          - '%app.hatena_blog_api_username%'
+          - '%app.hatena_blog_api_blog_id%'
+
