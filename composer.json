@@ -1,5 +1,19 @@
 {
+    "name": "aods1004/phpstorm-hatenablog-client",
+    "description": "It is an attempt to build a local client of Web service provided by AtomPub on PHPStorm.",
     "type": "project",
+    "keywords": [
+        "phpstorm",
+        "AtomPub",
+        "HatenaBlog"
+    ],
+    "homepage": "https://aods1004.hatenablog.jp/",
+    "authors": [
+        {
+            "name": "amemura",
+            "email": "aods1004@yahoo.co.jp"
+        }
+    ],
     "license": "proprietary",
     "require": {
         "php": "^7.1.3",
