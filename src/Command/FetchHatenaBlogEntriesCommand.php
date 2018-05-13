@@ -12,18 +12,13 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class FetchHatenaBlogEntriesCommand extends Command
 {
-    protected static $defaultName = 'app:fetch-hatena-blog-entries';
-
-    public function __construct()
-    {
-        parent::__construct();
-    }
     /**
      * {@inheritdoc}
      */
     protected function configure()
     {
         $this
+            ->setName('app:fetch-entries')
             ->setDescription('fetch HatenaBlog entries');
     }
 
