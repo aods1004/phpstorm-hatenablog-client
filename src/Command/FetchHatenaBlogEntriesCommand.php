@@ -69,7 +69,7 @@ class FetchHatenaBlogEntriesCommand extends Command
             $feed = $this->fetch($uri, $entries);
         }
         foreach ($entries as $entry) {
-            var_dump($entry->getTitle());
+            var_dump($entry->getUpdated()->format(DATE_ATOM), $entry->getTitle());
         }
 
     }

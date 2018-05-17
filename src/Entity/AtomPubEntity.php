@@ -54,4 +54,12 @@ abstract class  AtomPubEntity
     {
         return $this->title;
     }
+
+    /**
+     * @return \DateTimeInterface
+     */
+    public function getUpdated(): \DateTimeInterface
+    {
+        return $this->updated;
+    }
 }
