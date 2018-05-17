@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Command;
 
+use App\Entity\Entries;
+use App\Entity\Feed;
 use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use EightPoints\Bundle\GuzzleBundle\EightPointsGuzzleBundle;
+use Symfony\Component\Serializer\SerializerInterface;
 
 /**
  * Class FetchHatenaBlogEntriesCommand
@@ -17,17 +22,23 @@ class FetchHatenaBlogEntriesCommand extends Command
 
     /** @var Client */
     protected $client;
+    /** @var string */
     protected $username;
+    /** @var string */
     protected $blogId;
+    /** @var SerializerInterface */
+    protected $serializer;
 
     /**
      * FetchHatenaBlogEntriesCommand constructor.
-     * @param Client|null $client
+     * @param SerializerInterface $serializer
+     * @param ClientInterface|null $client
      * @param string $username
      * @param string $blogId
      */
-    public function __construct(Client $client = null, string $username = '', string $blogId = '')
+    public function __construct(SerializerInterface $serializer, ClientInterface $client = null, string $username = '', string $blogId = '')
     {
+        $this->serializer = $serializer;
         $this->client = $client;
         $this->username = $username;
         $this->blogId = $blogId;
@@ -50,7 +61,31 @@ class FetchHatenaBlogEntriesCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $resupose = $this->client->get("/{$this->username}/{$this->blogId}/atom/entry");
-        var_dump($resupose->getBody()->getContents());
+        // $this->serializer = new Serializer([new AtomFeedNormalizer()], [new XmlEncoder()]);
+
+        $entries = new Entries();
+        $feed = $this->fetch("/{$this->username}/{$this->blogId}/atom/entry", $entries);
+        while ($uri = $feed->getNextLinkUri()) {
+            $feed = $this->fetch($uri, $entries);
+        }
+        foreach ($entries as $entry) {
+            var_dump($entry->getTitle());
+        }
+
+    }
+
+    /**
+     * @param $uri
+     * @param Entries|null $globalEntries
+     * @return Feed
+     */
+    protected function fetch($uri, ?Entries $globalEntries = null): Feed
+    {
+        /** @var Feed $feed */
+        $feed = $this->serializer->deserialize(
+            $this->client->get($uri)->getBody()->getContents(), Feed::class, 'xml', [
+            'global_entries_collection' => $globalEntries
+        ]);
+        return $feed;
     }
 }

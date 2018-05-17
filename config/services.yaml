@@ -19,19 +19,19 @@ services:
         resource: '../src/*'
         exclude: '../src/{Entity,Migrations,Tests,Kernel.php}'
 
-    # controllers are imported separately to make sure services can be injected
-    # as action arguments even if you don't extend any base controller class
-    App\Controller\:
-        resource: '../src/Controller'
-        tags: ['controller.service_arguments']
-
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
-
     fetch_hatena_blog_entries:
         class: App\Command\FetchHatenaBlogEntriesCommand
         arguments:
+          - '@atom_pub_feed_serializer'
           - '@eight_points_guzzle.client.hatena_blog_atom_pub_api'
           - '%app.hatena_blog_api_username%'
           - '%app.hatena_blog_api_blog_id%'
 
+    atom_pub_feed_serializer:
+        class: Symfony\Component\Serializer\Serializer
+        arguments:
+          - ['@atom_pub_feed_normalizer']
+          - ['@serializer.encoder.xml']
+
+    atom_pub_feed_normalizer:
+        class: App\Component\Serializer\Normalizer\AtomFeedNormalizer
