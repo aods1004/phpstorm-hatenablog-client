@@ -31,7 +31,7 @@ class Feed extends AtomPubEntity
         string $subtitle,
         array $author,
         ?Entries $entries,
-        ?Links $links,
+        Links $links,
         ?\DateTimeInterface $updated
     )
     {
@@ -41,15 +41,18 @@ class Feed extends AtomPubEntity
     }
 
     /**
-     * @return null
+     * @return Links
      */
-    public function getNextLinkUri()
+    public function getLinks()
     {
-        foreach ($this->links ?: [] as $link) {
-            if ($next = $link->getNextUri()) {
-                return $next;
-            }
-        }
-        return null;
+        return $this->links;
+    }
+
+    /**
+     * @return Entries
+     */
+    public function getEntries(): Entries
+    {
+        return $this->entries;
     }
 }

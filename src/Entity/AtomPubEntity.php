@@ -2,7 +2,10 @@
 
 namespace App\Entity;
 
-
+/**
+ * Class AtomPubEntity
+ * @package App\Entity
+ */
 abstract class  AtomPubEntity
 {
     /** @var string */

@@ -6,6 +6,7 @@ use App\Entity\{
     Content, Entries, Entry, Feed, Link, Links
 };
 use function GuzzleHttp\Psr7\uri_for;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 
 /**
@@ -14,6 +15,11 @@ use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
  */
 class AtomFeedNormalizer implements DenormalizerInterface
 {
+    /**
+     * @var EventDispatcherInterface
+     */
+    protected $eventDispatcher;
+
     /**
      * {@inheritdoc}
      */
@@ -27,29 +33,25 @@ class AtomFeedNormalizer implements DenormalizerInterface
      */
     public function denormalize($data, $class, $format = null, array $context = [])
     {
-        return new Feed(
+        $feed = new Feed(
             $data['id'] ?? '',
             $data['title'] ?? '',
             $data['subtitle'] ?? '',
             $data['author'] ?? [],
-            $this->denormalizeAtomEntries($data['entry'] ?? [], $context),
+            $this->denormalizeAtomEntries($data['entry'] ?? []),
             $this->denormalizeAtomLinks($data['link'] ?? []),
             $this->denormalizeAtomDatetime($data['updated'] ?? null)
         );
+        return $feed;
     }
     /**
      * @param $data
      * @param array $context
      * @return Entries
      */
-    public function denormalizeAtomEntries($data, array $context = []): Entries
+    public function denormalizeAtomEntries($data): Entries
     {
         $entriesEntity = new Entries();
-        /** @var Entries $globalEntries */
-        $globalEntries = null;
-        if (isset($context['global_entries_collection']) && $context['global_entries_collection'] instanceof Entries) {
-            $globalEntries = $context['global_entries_collection'];
-        }
         foreach ($data as $entry) {
             $entryEntity = new Entry(
                 $entry['id'] ?? '',
@@ -63,9 +65,6 @@ class AtomFeedNormalizer implements DenormalizerInterface
                 $this->denormalizeAtomLinks($entry['link'] ?? [])
             );
             $entriesEntity->append($entryEntity);
-            if ($globalEntries) {
-                $globalEntries->append($entryEntity);
-            }
         }
         return $entriesEntity;
     }

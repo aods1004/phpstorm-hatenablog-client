@@ -1,8 +1,7 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
-    app.hatena_blog_api_username: '%env(HATENA_BLOG_API_USER)%'
-    app.hatena_blog_api_blog_id: '%env(HATENA_BLOG_API_BLOG_ID)%'
+    app.hatena_blog_api_first_feed_uri: '%env(HATENA_BLOG_API_FIRST_FEED_URI)%'
 
 services:
     # default configuration for services in *this* file
@@ -22,16 +21,16 @@ services:
     fetch_hatena_blog_entries:
         class: App\Command\FetchHatenaBlogEntriesCommand
         arguments:
-          - '@atom_pub_feed_serializer'
-          - '@eight_points_guzzle.client.hatena_blog_atom_pub_api'
-          - '%app.hatena_blog_api_username%'
-          - '%app.hatena_blog_api_blog_id%'
+          - '@App\Repository\AtomPubRemoteAtomPubRepository'
 
     atom_pub_feed_serializer:
         class: Symfony\Component\Serializer\Serializer
         arguments:
-          - ['@atom_pub_feed_normalizer']
+          - ['@App\Component\Serializer\Normalizer\AtomFeedNormalizer']
           - ['@serializer.encoder.xml']
 
-    atom_pub_feed_normalizer:
-        class: App\Component\Serializer\Normalizer\AtomFeedNormalizer
+    App\Repository\AtomPubRemoteAtomPubRepository:
+        arguments:
+          - '%app.hatena_blog_api_first_feed_uri%'
+          - '@eight_points_guzzle.client.hatena_blog_atom_pub_api'
+          - '@atom_pub_feed_serializer'

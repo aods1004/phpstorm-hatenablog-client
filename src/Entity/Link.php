@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use Psr\Http\Message\UriInterface;
+use Psr\Link\LinkInterface;
 
 /**
  * Class Link
  * @package App\Entity
  */
-class Link
+class Link implements LinkInterface
 {
     const RELATION_NEXT = 'next';
     /** @var string */
@@ -34,13 +35,39 @@ class Link
     }
 
     /**
-     * @return UriInterface
+     * @return UriInterface|string
      */
-    public function getNextUri()
+    public function getHref()
     {
-        if ($this->relation === static::RELATION_NEXT) {
-            return $this->uri;
-        }
-        return null;
+        return $this->uri;
     }
+
+    /**
+     * @return bool
+     */
+    public function isTemplated()
+    {
+        return false;
+    }
+
+    /**
+     * @return string|string[]
+     */
+    public function getRels()
+    {
+        return [$this->relation];
+    }
+
+    /**
+     * @return array
+     */
+    public function getAttributes(): array
+    {
+        return array_filter([
+            'rel' => $this->relation,
+            'type' => $this->type,
+            'href' => $this->uri,
+        ]);
+    }
+
 }
