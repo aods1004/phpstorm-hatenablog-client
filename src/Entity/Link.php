@@ -14,8 +14,8 @@ use Psr\Link\LinkInterface;
 class Link implements LinkInterface
 {
     const RELATION_NEXT = 'next';
-    /** @var string */
-    private $relation;
+    /** @var string[] */
+    private $relations;
     /** @var UriInterface */
     private $uri;
     /** @var string */
@@ -23,13 +23,13 @@ class Link implements LinkInterface
 
     /**
      * Link constructor.
-     * @param string $relation
+     * @param array $relations
      * @param UriInterface $uri
      * @param string $type
      */
-    public function __construct(string $relation, UriInterface $uri, string $type)
+    public function __construct(array $relations, UriInterface $uri, string $type)
     {
-        $this->relation = $relation;
+        $this->relations = $relations;
         $this->uri = $uri;
         $this->type = $type;
     }
@@ -51,11 +51,11 @@ class Link implements LinkInterface
     }
 
     /**
-     * @return string|string[]
+     * @return array|string[]
      */
     public function getRels()
     {
-        return [$this->relation];
+        return $this->relations;
     }
 
     /**
@@ -64,8 +64,8 @@ class Link implements LinkInterface
     public function getAttributes(): array
     {
         return array_filter([
-            'rel' => $this->relation,
-            'type' => $this->type,
+            'rel' => $this->relations,
+            'content-type' => $this->type,
             'href' => $this->uri,
         ]);
     }

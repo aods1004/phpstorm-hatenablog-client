@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace App\Entity;
+use Psr\Link\LinkInterface;
 
 /**
  * Class Feed
@@ -46,6 +47,15 @@ class Feed extends AtomPubEntity
     public function getLinks()
     {
         return $this->links;
+    }
+
+    /**
+     * @return LinkInterface|Link|null
+     */
+    public function getNextLink()
+    {
+        $links = $this->getLinks()->getLinksByRel(Link::RELATION_NEXT);
+        return $links[0] ?? null;
     }
 
     /**

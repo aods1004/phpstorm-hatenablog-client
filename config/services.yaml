@@ -2,9 +2,10 @@
 # https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
     app.hatena_blog_api_first_feed_uri: '%env(HATENA_BLOG_API_FIRST_FEED_URI)%'
+    app.hatena_blog_entry_local_dir: '%kernel.project_dir%/../entries'
 
 services:
-    # default configuration for services in *this* file
+
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
@@ -12,25 +13,47 @@ services:
                             # fetching services directly from the container via $container->get() won't work.
                             # The best practice is to be explicit about your dependencies anyway.
 
-    # makes classes in src/ available to be used as services
-    # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/*'
-        exclude: '../src/{Entity,Migrations,Tests,Kernel.php}'
+        exclude: '../src/{Entity,Tests,Kernel.php}'
 
-    fetch_hatena_blog_entries:
+    app.fetch_hatena_blog_entries:
         class: App\Command\FetchHatenaBlogEntriesCommand
         arguments:
-          - '@App\Repository\AtomPubRemoteAtomPubRepository'
+            - '@app.repository.remote'
+            - '@app.repository.local'
 
-    atom_pub_feed_serializer:
+    app.serializer.atom_pub_serializer:
         class: Symfony\Component\Serializer\Serializer
         arguments:
-          - ['@App\Component\Serializer\Normalizer\AtomFeedNormalizer']
-          - ['@serializer.encoder.xml']
+          -
+            - '@app.normalizer.atom_pub_feed_denormalizer'
+            - '@app.normalizer.atom_pub_entry_normalizer'
+          -
+            - '@serializer.encoder.xml'
+            - '@serializer.encoder.json'
+            - '@app.encoder.local_file_entry_encoder'
 
-    App\Repository\AtomPubRemoteAtomPubRepository:
+    app.normalizer.atom_pub_feed_denormalizer:
+        class: App\Normalizer\AtomPubFeedDenormalizer
+
+    app.normalizer.atom_pub_entry_normalizer:
+        class: App\Normalizer\AtomPubEntryNormalizer
+
+    app.encoder.local_file_entry_encoder:
+        class: App\Encoder\LocalFileEntryEncoder
+        arguments:
+          - '@twig'
+
+    app.repository.remote:
+        class: App\Repository\RemoteAtomPubRepository
         arguments:
           - '%app.hatena_blog_api_first_feed_uri%'
           - '@eight_points_guzzle.client.hatena_blog_atom_pub_api'
-          - '@atom_pub_feed_serializer'
+          - '@app.serializer.atom_pub_serializer'
+
+    app.repository.local:
+        class: App\Repository\LocalAtomPubRepository
+        arguments:
+          - '%app.hatena_blog_entry_local_dir%'
+          - '@app.serializer.atom_pub_serializer'

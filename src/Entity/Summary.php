@@ -8,19 +8,19 @@ namespace App\Entity;
  * Class Content
  * @package App\Entity
  */
-class Content
+class Summary
 {
-    /** @var ContentType */
+    /** @var string|null */
     protected $type;
     /** @var string|null */
     protected $value;
 
     /**
      * Content constructor.
-     * @param ContentType $type
-     * @param null|string $value
+     * @param string $type
+     * @param string $value
      */
-    public function __construct(ContentType $type, ?string $value)
+    public function __construct(?string $type, ?string $value)
     {
         $this->type = $type;
         $this->value = $value;
@@ -34,10 +34,18 @@ class Content
         return $this->value;
     }
     /**
-     * @return ContentType
+     * @return null|string
      */
-    public function getType(): ?ContentType
+    public function getType(): ?string
     {
         return $this->type;
+    }
+
+    /**
+     * @return string
+     */
+    public function getHash()
+    {
+        return md5($this->value);
     }
 }

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\Entries;
+use App\Entity\Entry;
 use App\Entity\Feed;
-use App\Entity\Link;
 use GuzzleHttp\Client;
 use function GuzzleHttp\Psr7\uri_for;
 use Psr\Http\Message\UriInterface;
@@ -16,7 +16,7 @@ use Symfony\Component\Serializer\SerializerInterface;
  * Class AtomPubRepository
  * @package App\Repository
  */
-class AtomPubRemoteAtomPubRepository implements AtomPubRepositoryInterface
+class RemoteAtomPubRepository implements AtomPubRepositoryInterface
 {
     /** @var UriInterface */
     protected $firstFeedUri;
@@ -45,31 +45,37 @@ class AtomPubRemoteAtomPubRepository implements AtomPubRepositoryInterface
         $this->entries = new Entries();
     }
 
-    public function fetchAll()
+    /**
+     * @return Entries
+     */
+    public function loadAll(): Entries
     {
-        $feeds = [];
-        $feed = $this->fetch($this->firstFeedUri);
-        while ($links = $feed->getLinks()->getLinksByRel(Link::RELATION_NEXT)) {
-            foreach ($links as $link) {
-                $feed = $this->fetch($link->getHref());
-                foreach ($feed->getEntries() as $entry) {
-                    $this->entries->append($entry);
-                }
-            }
+        $feed = $this->fetchFeed($this->firstFeedUri);
+        return $this->entries;
+        while($nextLink = $feed->getNextLink()) {
+            $feed = $this->fetchFeed($nextLink->getHref());
         }
-        return $feeds;
+
+        return $this->entries;
+    }
+
+    public function updateEntry(Entry $entry)
+    {
+
     }
 
     /**
      * @param UriInterface $uri
-     * @param Entries|null $globalEntries
      * @return Feed
      */
-    public function fetch(UriInterface $uri, ?Entries $globalEntries = null): Feed
+    public function fetchFeed(UriInterface $uri): Feed
     {
         /** @var Feed $feed */
         $feed = $this->serializer->deserialize(
             $this->client->get($uri)->getBody()->getContents(), Feed::class, 'xml');
+        foreach ($feed->getEntries() as $entry) {
+            $this->entries->append($entry);
+        }
         return $feed;
     }
 
@@ -78,7 +84,7 @@ class AtomPubRemoteAtomPubRepository implements AtomPubRepositoryInterface
      */
     public function getEntries(): Entries
     {
-        $this->fetchAll();
+        $this->loadAll();
         return $this->entries;
     }
 }

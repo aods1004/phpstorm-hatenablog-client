@@ -1,0 +1,6 @@
+twig:
+    exception_controller:  twig.controller.exception:showAction
+    cache: '%kernel.cache_dir%/twig'
+    charset: '%kernel.charset%'
+    debug: '%kernel.debug%'
+    default_path: '%kernel.project_dir%/templates'

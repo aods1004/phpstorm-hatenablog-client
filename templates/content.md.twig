@@ -1,0 +1,9 @@
+{{ '{{' }}
+app_entry({
+  title: '{{ title }}',
+  updated: '{{ updated }}',
+  category: [{% for i in category %} '{{ i }}', {% endfor %}],
+  draft: '{{ control['app:draft'] }}',
+})
+{{ '}}' }}
+{{ content['#']|raw }}

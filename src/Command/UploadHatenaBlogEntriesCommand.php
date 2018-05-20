@@ -14,17 +14,20 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Class FetchHatenaBlogEntriesCommand
  * @package App\Command
  */
-class FetchHatenaBlogEntriesCommand extends Command
+class UploadHatenaBlogEntriesCommand extends Command
 {
     /** @var RemoteAtomPubRepository */
     protected $remoteRepository;
     /** @var LocalAtomPubRepository */
     protected $localRepository;
+
+    /** @var \Twig_Extension_Core */
+    protected $twig;
     /** @var string  */
     protected $dir;
 
     /**
-     * FetchHatenaBlogEntriesCommand constructor.
+     * UploadHatenaBlogEntriesCommand constructor.
      * @param RemoteAtomPubRepository $remoteRepository
      * @param LocalAtomPubRepository $localRepository
      */
@@ -42,7 +45,7 @@ class FetchHatenaBlogEntriesCommand extends Command
     protected function configure()
     {
         $this
-            ->setName('app:fetch-entries')
+            ->setName('app:update-entries')
             ->setDescription('fetch HatenaBlog entries');
     }
 
@@ -51,8 +54,8 @@ class FetchHatenaBlogEntriesCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        foreach ($this->remoteRepository->getEntries() as $entry) {
-            $this->localRepository->save($entry);
+        foreach ($this->localRepository->findEditedEntry() as $entry) {
+            $this->remoteRepository->updateEntry($entry);
         }
     }
 }
