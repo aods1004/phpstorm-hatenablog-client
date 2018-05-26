@@ -11,7 +11,8 @@ namespace App\Entity;
 class Entry implements AtomPubEntityInterface
 {
     use AtomPubEntityTrait;
-
+    /** @var IdInterface */
+    protected $id;
     /** @var Content */
     protected $summary;
     /** @var Content */
@@ -26,10 +27,13 @@ class Entry implements AtomPubEntityInterface
     protected $control;
     /** @var Link */
     protected $editLink;
-
+    /** @var Link */
+    protected $alternateLink;
+    /** @var string */
+    protected $entryIdPrefix;
     /**
      * Entry constructor.
-     * @param string $id
+     * @param EntryId $id
      * @param string $title
      * @param array $author
      * @param Summary $summary
@@ -42,7 +46,7 @@ class Entry implements AtomPubEntityInterface
      * @param array $control
      */
     public function __construct(
-        string $id,
+        EntryId $id,
         string $title,
         array $author,
         Summary $summary,
@@ -55,6 +59,7 @@ class Entry implements AtomPubEntityInterface
         array $control
     )
     {
+        $this->id = $id;
         $this->published = $published;
         $this->edited = $edited;
         $this->summary = $summary;
@@ -67,10 +72,29 @@ class Entry implements AtomPubEntityInterface
                     case Link::EDIT:
                         $this->editLink = $link;
                         break;
+                    case Link::ALTERNATE:
+                        $this->alternateLink = $link;
+                        break;
                 }
             }
         }
-        $this->setAtomPubEntityCommonInfo($id, $title, $author, $links, $updated);
+        $this->setAtomPubEntityCommonInfo($title, $author, $links, $updated);
+    }
+
+    /**
+     * @return EntryId
+     */
+    public function getId(): IdInterface
+    {
+        return $this->id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEntryId()
+    {
+        return $this->getId()->getEntryId();
     }
 
     /**
@@ -159,4 +183,13 @@ class Entry implements AtomPubEntityInterface
     {
         return $this->editLink;
     }
+
+    /**
+     * @return Link
+     */
+    public function getAlternateLink(): Link
+    {
+        return $this->alternateLink;
+    }
+
 }

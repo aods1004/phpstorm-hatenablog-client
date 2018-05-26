@@ -3,7 +3,7 @@
 namespace App\Normalizer;
 
 use App\Entity\{
-    Entry
+    Entry, EntryId
 };
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
@@ -15,6 +15,18 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 class AtomPubEntryNormalizer implements NormalizerInterface,DenormalizerInterface
 {
     use AtomPubNormalizerTrait;
+
+    /** @var string */
+    protected $entryIdPrefix;
+
+    /**
+     * AtomPubEntryNormalizer constructor.
+     * @param $entryIdPrefix
+     */
+    public function __construct(string $entryIdPrefix = '')
+    {
+        $this->entryIdPrefix = $entryIdPrefix;
+    }
 
     /**
      * {@inheritdoc}
@@ -41,7 +53,7 @@ class AtomPubEntryNormalizer implements NormalizerInterface,DenormalizerInterfac
     {
         /** @type Entry $object */
         return array_filter([
-            'id' => $object->getId(),
+            'id' => strval($object->getId()),
             'title' => $object->getTitle(),
             'content' => array_filter([
                 '#' => (string) $object->getContent()->getValue(),
@@ -68,7 +80,7 @@ class AtomPubEntryNormalizer implements NormalizerInterface,DenormalizerInterfac
         $remoteEntry = $context['remote_entry'] ?? null;
         if ($remoteEntry instanceof Entry) {
             $data['link'] = $this->normalizeLink($remoteEntry->getLinks());
-            $data['id'] = $remoteEntry->getId();
+            $data['id'] = strval($remoteEntry->getId());
             $data['published'] = $this->normalizeDatetime($remoteEntry->getPublished());
         }
         if ($context['edited'] ?? null) {
@@ -76,5 +88,24 @@ class AtomPubEntryNormalizer implements NormalizerInterface,DenormalizerInterfac
         }
         return $this->denormalizeAtomEntry($data);
     }
-
+    /**
+     * @param $entry
+     * @return Entry
+     */
+    public function denormalizeAtomEntry($entry)
+    {
+        return new Entry(
+            new EntryId($entry['id'], $this->entryIdPrefix),
+            $entry['title'],
+            $entry['author'] ?? [],
+            $this->denormalizeAtomSummary($entry['summary'] ?? []),
+            $this->denormalizeAtomContent($entry['content'] ?? []),
+            \DateTimeImmutable::createFromFormat(DATE_ATOM,$entry['updated']),
+            \DateTimeImmutable::createFromFormat(DATE_ATOM, $entry['published']),
+            \DateTimeImmutable::createFromFormat(DATE_ATOM, $entry['app:edited']),
+            $this->denormalizeAtomLinks($entry['link'] ?? []),
+            $this->denormalizeAtomCategory($entry['category'] ?? []),
+            $entry['app:control'] ?? []
+        );
+    }
 }

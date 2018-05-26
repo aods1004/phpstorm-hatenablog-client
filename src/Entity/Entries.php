@@ -20,6 +20,6 @@ class Entries implements CollectionInterface
      */
     public function append(Entry $entry): void
     {
-        $this->items[$entry->getId()] = $entry;
+        $this->items[strval($entry->getId())] = $entry;
     }
 }

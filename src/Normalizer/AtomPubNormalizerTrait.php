@@ -6,7 +6,6 @@ use App\Entity\Categories;
 use App\Entity\Category;
 use App\Entity\Content;
 use App\Entity\ContentType;
-use App\Entity\Entry;
 use App\Entity\Link;
 use App\Entity\Links;
 use App\Entity\Summary;
@@ -63,26 +62,7 @@ trait AtomPubNormalizerTrait
         return null;
     }
 
-    /**
-     * @param $entry
-     * @return Entry
-     */
-    public function denormalizeAtomEntry($entry)
-    {
-        return new Entry(
-            $entry['id'],
-            $entry['title'],
-            $entry['author'] ?? [],
-            $this->denormalizeAtomSummary($entry['summary'] ?? []),
-            $this->denormalizeAtomContent($entry['content'] ?? []),
-            \DateTimeImmutable::createFromFormat(DATE_ATOM,$entry['updated']),
-            \DateTimeImmutable::createFromFormat(DATE_ATOM, $entry['published']),
-            \DateTimeImmutable::createFromFormat(DATE_ATOM, $entry['app:edited']),
-            $this->denormalizeAtomLinks($entry['link'] ?? []),
-            $this->denormalizeAtomCategory($entry['category'] ?? []),
-            $entry['app:control'] ?? []
-        );
-    }
+
 
 
     /**

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Command;
 
-use App\Entity\Link;
 use App\Repository\LocalAtomPubRepository;
 use App\Repository\RemoteAtomPubRepository;
 use Symfony\Component\Console\Command\Command;
@@ -64,9 +63,7 @@ class UploadHatenaBlogEntriesCommand extends Command
                 continue;
             }
             $resultEntry = $this->remoteRepository->save($localEntry);
-            foreach ($resultEntry->getLinks()->getLinksByRel(Link::ALTERNATE) as $link) {
-                echo "UPDATE: {$resultEntry->getTitle()} " . strval($link->getHref()) . PHP_EOL;
-            }
+            echo "UPDATE: {$resultEntry->getTitle()} " . $resultEntry->getAlternateLink()->getHref() . PHP_EOL;
             $this->localRepository->save($resultEntry);
         }
     }

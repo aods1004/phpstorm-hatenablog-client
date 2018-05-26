@@ -1,5 +1,6 @@
 parameters:
     app.hatena_blog_api_first_feed_uri: '%env(HATENA_BLOG_API_FIRST_FEED_URI)%'
+    app.hatena_blog_entry_id_prefix: '%env(HATENA_BLOG_ENTRY_ID_PREFIX)%'
     app.hatena_blog_entry_local_dir: '%kernel.project_dir%/../entries'
 
 services:
@@ -41,9 +42,13 @@ services:
 
     app.normalizer.atom_pub_feed_denormalizer:
         class: App\Normalizer\AtomPubFeedDenormalizer
+        arguments:
+          - '@app.normalizer.atom_pub_entry_normalizer'
 
     app.normalizer.atom_pub_entry_normalizer:
         class: App\Normalizer\AtomPubEntryNormalizer
+        arguments:
+          - '%app.hatena_blog_entry_id_prefix%'
 
     app.encoder.entry_markdown_encoder:
         class: App\Encoder\EntryMarkdownEncoder

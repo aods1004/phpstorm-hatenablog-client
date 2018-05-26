@@ -3,7 +3,7 @@
 namespace App\Normalizer;
 
 use App\Entity\{
-    Entries, Feed
+    Entries, Entry, Feed, FeedId
 };
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 
@@ -23,10 +23,11 @@ class AtomPubFeedDenormalizer implements DenormalizerInterface
 
     /**
      * AtomPubFeedDenormalizer constructor.
+     * @param AtomPubEntryNormalizer $entryNormalizer
      */
-    public function __construct()
+    public function __construct(AtomPubEntryNormalizer $entryNormalizer)
     {
-        $this->entryNormalizer = new AtomPubEntryNormalizer();
+        $this->entryNormalizer = $entryNormalizer;
     }
 
     /**
@@ -44,7 +45,7 @@ class AtomPubFeedDenormalizer implements DenormalizerInterface
     {
         $globalEntries = $context[static::CONTEXT_GLOBAL_ENTRIES] ?? null;
         $feed = new Feed(
-            $data['id'] ?? '',
+            new FeedId($data['id'] ?? ''),
             $data['title'] ?? '',
             $data['subtitle'] ?? '',
             $data['author'] ?? [],
@@ -62,11 +63,9 @@ class AtomPubFeedDenormalizer implements DenormalizerInterface
      */
     public function denormalizeAtomEntries($data, ?Entries $globalEntries = null): Entries
     {
-
-
         $entries= new Entries();
         foreach ($data as $entry) {
-            $entry = $this->denormalizeAtomEntry($entry);
+            $entry = $this->entryNormalizer->denormalize($entry, Entry::class);
             $entries->append($entry);
             if ($globalEntries) {
                 $globalEntries->append($entry);

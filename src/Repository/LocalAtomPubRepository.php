@@ -29,8 +29,6 @@ class LocalAtomPubRepository implements AtomPubRepositoryInterface
     protected $localDir;
     /** @var string */
     protected $localPublicDir;
-    /** @var string */
-    protected $entryIdPrefix;
     /** @var \Twig_Environment */
     protected $twig;
     /** @var string */
@@ -52,8 +50,6 @@ class LocalAtomPubRepository implements AtomPubRepositoryInterface
         $this->filesystem = new Filesystem();
         $this->serializer = $serializer;
         $this->localDir = realpath($localDir);
-        $this->localPublicDir = realpath($localDir) . DIRECTORY_SEPARATOR . 'public';
-        $this->entryIdPrefix = 'tag:blog.hatena.ne.jp,2013:blog-aods1004-12704346814674010979-';
     }
     /**
      * @param Entry $entry
@@ -74,7 +70,7 @@ class LocalAtomPubRepository implements AtomPubRepositoryInterface
     {
         $entries = new Entries();
         /** @var SplFileInfo $file */
-        foreach ($this->finder->files()->in($this->localDir.'/public')->name('*.md.twig') as $file) {
+        foreach ($this->finder->files()->in($this->createPublicDirPath())->name('*.md.twig') as $file) {
             /** @type Entry $remoteEntry */
             $remoteEntry = $this->serializer->deserialize(
                 file_get_contents($this->createMetaFilePathByFileInfo($file)),
@@ -85,7 +81,6 @@ class LocalAtomPubRepository implements AtomPubRepositoryInterface
                 ['remote_entry' => $remoteEntry, 'edited' => date(DATE_ATOM, $file->getCTime())]);
 
             if ($fileEntry->getHash() !== $remoteEntry->getHash()) {
-                // var_dump($fileEntry->getEdited());
                 $entries->append($fileEntry);
             }
         }
@@ -129,9 +124,17 @@ class LocalAtomPubRepository implements AtomPubRepositoryInterface
      */
     private function createSaveDirPath(Entry $entry)
     {
-        // str_replace($this->entryIdPrefix, '', trim($entry->getId()));
-        return $this->localDir
-            . DIRECTORY_SEPARATOR . 'public'
-            . DIRECTORY_SEPARATOR . $entry->getPublished()->format('YmdHis');
+        return $this->createPublicDirPath()
+            . DIRECTORY_SEPARATOR . $entry->getPublished()->format('YmdHis')
+            . '_' . $entry->getEntryId();
     }
+
+    /**
+     * @return string
+     */
+    private function createPublicDirPath()
+    {
+        return $this->localDir . DIRECTORY_SEPARATOR . 'public';
+    }
+
 }

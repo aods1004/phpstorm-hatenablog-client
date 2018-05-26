@@ -13,14 +13,17 @@ class Feed
 {
     use AtomPubEntityTrait;
 
+    /** @var IdInterface */
+    protected $id;
     /** @var string */
     protected $subtitle;
     /** @var Entries */
     protected $entries = [];
-
+    /** @var Link */
+    protected $alternateLink;
     /**
      * Feed constructor.
-     * @param string $id
+     * @param FeedId $id
      * @param string $title
      * @param string $subtitle
      * @param array $author
@@ -30,7 +33,7 @@ class Feed
      * @param Entry|null $globalEntries
      */
     public function __construct(
-        string $id,
+        FeedId $id,
         string $title,
         string $subtitle,
         array $author,
@@ -40,6 +43,7 @@ class Feed
         ?Entry $globalEntries = null
     )
     {
+        $this->id = $id;
         $this->subtitle = $subtitle;
         $this->entries = $entries;
         foreach ($links ?? [] as $link) {
@@ -48,13 +52,19 @@ class Feed
                     case Link::ALTERNATE:
                         $this->alternateLink = $link;
                         break;
-                    case Link::EDIT:
-                        $this->editLink = $link;
-                        break;
                 }
             }
         }
-        $this->setAtomPubEntityCommonInfo($id, $title, $author, $links, $updated);
+        $this->setAtomPubEntityCommonInfo($title, $author, $links, $updated);
+    }
+
+
+    /**
+     * @return EntryId
+     */
+    public function getId(): IdInterface
+    {
+        return $this->id;
     }
 
     /**
@@ -80,5 +90,13 @@ class Feed
     public function getEntries(): Entries
     {
         return $this->entries;
+    }
+
+    /**
+     * @return Link
+     */
+    public function getAlternateLink(): Link
+    {
+        return $this->alternateLink;
     }
 }
