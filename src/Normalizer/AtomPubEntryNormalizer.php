@@ -40,21 +40,20 @@ class AtomPubEntryNormalizer implements NormalizerInterface,DenormalizerInterfac
     public function normalize($object, $format = null, array $context = [])
     {
         /** @type Entry $object */
-        return [
+        return array_filter([
             'id' => $object->getId(),
             'title' => $object->getTitle(),
             'content' => array_filter([
                 '#' => (string) $object->getContent()->getValue(),
                 '@type' => (string) $object->getContent()->getType(),
             ]),
-            'updated' => $object->getUpdated()->format(DATE_ATOM),
-            'published' => $object->getPublished()->format(DATE_ATOM),
-            'edited' => $object->getEdited()->format(DATE_ATOM),
-            'saved' => date(DATE_ATOM),
+            'updated' => $this->normalizeDatetime($object->getUpdated()),
+            'published' => $this->normalizeDatetime($object->getPublished()),
+            'app:edited' => $this->normalizeDatetime($object->getEdited()),
             'category' => $this->normalizeCategory($object->getCategories()),
-            'control' => $object->getControl(),
+            'app:control' => $object->getControl(),
             'link' => $this->normalizeLink($object->getLinks()),
-        ];
+        ]);
     }
 
     /**
@@ -66,6 +65,15 @@ class AtomPubEntryNormalizer implements NormalizerInterface,DenormalizerInterfac
      */
     public function denormalize($data, $class, $format = null, array $context = [])
     {
+        $remoteEntry = $context['remote_entry'] ?? null;
+        if ($remoteEntry instanceof Entry) {
+            $data['link'] = $this->normalizeLink($remoteEntry->getLinks());
+            $data['id'] = $remoteEntry->getId();
+            $data['published'] = $this->normalizeDatetime($remoteEntry->getPublished());
+        }
+        if ($context['edited'] ?? null) {
+            $data['app:edited'] = $context['edited'];
+        }
         return $this->denormalizeAtomEntry($data);
     }
 

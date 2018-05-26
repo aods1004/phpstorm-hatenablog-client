@@ -9,8 +9,10 @@ use Psr\Link\LinkInterface;
  * Class Feed
  * @package App\Entity
  */
-class Feed extends AtomPubEntity
+class Feed
 {
+    use AtomPubEntityTrait;
+
     /** @var string */
     protected $subtitle;
     /** @var Entries */
@@ -21,10 +23,11 @@ class Feed extends AtomPubEntity
      * @param string $id
      * @param string $title
      * @param string $subtitle
-     * @param array|null $author
+     * @param array $author
      * @param Entries|null $entries
-     * @param Links|null $links
+     * @param Links $links
      * @param \DateTimeInterface|null $updated
+     * @param Entry|null $globalEntries
      */
     public function __construct(
         string $id,
@@ -33,12 +36,25 @@ class Feed extends AtomPubEntity
         array $author,
         ?Entries $entries,
         Links $links,
-        ?\DateTimeInterface $updated
+        ?\DateTimeInterface $updated,
+        ?Entry $globalEntries = null
     )
     {
         $this->subtitle = $subtitle;
         $this->entries = $entries;
-        parent::__construct($id, $title, $author, $links, $updated);
+        foreach ($links ?? [] as $link) {
+            foreach ($link->getRels() as $relation) {
+                switch ($relation) {
+                    case Link::ALTERNATE:
+                        $this->alternateLink = $link;
+                        break;
+                    case Link::EDIT:
+                        $this->editLink = $link;
+                        break;
+                }
+            }
+        }
+        $this->setAtomPubEntityCommonInfo($id, $title, $author, $links, $updated);
     }
 
     /**
@@ -54,7 +70,7 @@ class Feed extends AtomPubEntity
      */
     public function getNextLink()
     {
-        $links = $this->getLinks()->getLinksByRel(Link::RELATION_NEXT);
+        $links = $this->getLinks()->getLinksByRel(Link::NEXT);
         return $links[0] ?? null;
     }
 

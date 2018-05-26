@@ -12,13 +12,13 @@ class ContentType
     const TEXT = 'text';
 
     const EXTENSION_MAP = [
-        self::HATENA_SYNTAX => '.hatena.txt',
+        self::HATENA_SYNTAX => '.md',
         self::MARKDOWN => '.md',
         self::HTML => '.html',
         self::TEXT => '.txt',
     ];
     const TYPENAME_MAP = [
-        self::HATENA_SYNTAX => 'hatena-syntax',
+        self::HATENA_SYNTAX => 'markdown',
         self::MARKDOWN => 'markdown',
         self::HTML => 'html',
         self::TEXT => 'text',

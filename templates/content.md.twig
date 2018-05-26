@@ -1,9 +1,9 @@
-{{ '{{' }}
-app_entry({
-  title: '{{ title }}',
-  updated: '{{ updated }}',
-  category: [{% for i in category %} '{{ i }}', {% endfor %}],
-  draft: '{{ control['app:draft'] }}',
-})
-{{ '}}' }}
-{{ content['#']|raw }}
+{{ '{{' }} app_entry({
+  url: "{{ url }}",
+  content_type: "{{ content_type }}",
+  title: "{{ title|meta_data }}",
+  updated: '{{ updated|raw }}',
+  category: [{% for i in category %}'{{ i|meta_data }}',{% endfor %}],
+  draft: '{{ draft|raw }}',
+}) {{ '}}' }}
+{{ content|md_content }}

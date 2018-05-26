@@ -8,29 +8,24 @@ namespace App\Entity;
  * Class Entry
  * @package App\Entity
  */
-class Entry extends AtomPubEntity
+class Entry implements AtomPubEntityInterface
 {
-    /** @var string */
-    protected $id;
-    /** @var string */
-    protected $title;
+    use AtomPubEntityTrait;
+
     /** @var Content */
     protected $summary;
     /** @var Content */
     protected $content;
     /** @var \DateTimeInterface */
-    protected $updated;
-    /** @var \DateTimeInterface */
     protected $published;
     /** @var \DateTimeInterface */
     protected $edited;
-    /** @var Links */
-    protected $links;
     /** @var Categories */
     protected $categories;
     /** @var array */
     protected $control;
-
+    /** @var Link */
+    protected $editLink;
 
     /**
      * Entry constructor.
@@ -66,7 +61,16 @@ class Entry extends AtomPubEntity
         $this->content = $content;
         $this->categories = $categories;
         $this->control = $control;
-        parent::__construct($id, $title, $author, $links, $updated);
+        foreach ($links ?? [] as $link) {
+            foreach ($link->getRels() as $relation) {
+                switch ($relation) {
+                    case Link::EDIT:
+                        $this->editLink = $link;
+                        break;
+                }
+            }
+        }
+        $this->setAtomPubEntityCommonInfo($id, $title, $author, $links, $updated);
     }
 
     /**
@@ -74,12 +78,24 @@ class Entry extends AtomPubEntity
      */
     public function getHash()
     {
-        $category = array_reduce($this->categories->getCategories(), function($carry, Category $category) {
-            return $carry.':'.strval($category);
-        });
-        return sha1(
-            trim($this->content->getValue()) . $this->updated->format(DATE_ATOM) . $category);
+
+        return sha1($this->createHashSeed());
     }
+
+    public function createHashSeed()
+    {
+        $category = array_reduce($this->categories->getCategories(), function($carry, Category $category) {
+            return $carry.','.strval($category);
+        });
+
+        return
+            'title: ' . $this->title
+            . 'content: ' . md5(trim($this->content->getValue()))
+            . ' update:' . $this->updated->format(DATE_ATOM)
+            . ' category: ' . $category
+            . ' draft: ' . $this->control['app:draft'];
+    }
+
 
     /**
      * @return Content
@@ -100,7 +116,7 @@ class Entry extends AtomPubEntity
     /**
      * @return \DateTimeInterface
      */
-    public function getPublished(): \DateTimeInterface
+    public function getPublished(): ?\DateTimeInterface
     {
         return $this->published;
     }
@@ -108,7 +124,7 @@ class Entry extends AtomPubEntity
     /**
      * @return \DateTimeInterface
      */
-    public function getEdited(): \DateTimeInterface
+    public function getEdited(): ?\DateTimeInterface
     {
         return $this->edited;
     }
@@ -134,5 +150,13 @@ class Entry extends AtomPubEntity
     public function getControl(): ?array
     {
         return $this->control;
+    }
+
+    /**
+     * @return Link
+     */
+    public function getEditLink(): Link
+    {
+        return $this->editLink;
     }
 }

@@ -16,6 +16,8 @@ class AtomPubFeedDenormalizer implements DenormalizerInterface
 
     use AtomPubNormalizerTrait;
 
+    const CONTEXT_GLOBAL_ENTRIES = 'global_entries';
+
     /** @var AtomPubEntryNormalizer */
     protected $entryNormalizer;
 
@@ -40,27 +42,35 @@ class AtomPubFeedDenormalizer implements DenormalizerInterface
      */
     public function denormalize($data, $class, $format = null, array $context = [])
     {
+        $globalEntries = $context[static::CONTEXT_GLOBAL_ENTRIES] ?? null;
         $feed = new Feed(
             $data['id'] ?? '',
             $data['title'] ?? '',
             $data['subtitle'] ?? '',
             $data['author'] ?? [],
-            $this->denormalizeAtomEntries($data['entry'] ?? []),
+            $this->denormalizeAtomEntries($data['entry'] ?? [], $globalEntries),
             $this->denormalizeAtomLinks($data['link'] ?? []),
-            $this->denormalizeAtomDatetime($data['updated'] ?? null)
+            \DateTimeImmutable::createFromFormat(DATE_ATOM, $data['updated'])
         );
         return $feed;
     }
 
     /**
      * @param $data
+     * @param Entries|null $globalEntries
      * @return Entries
      */
-    public function denormalizeAtomEntries($data): Entries
+    public function denormalizeAtomEntries($data, ?Entries $globalEntries = null): Entries
     {
+
+
         $entries= new Entries();
         foreach ($data as $entry) {
-            $entries->append($this->denormalizeAtomEntry($entry));
+            $entry = $this->denormalizeAtomEntry($entry);
+            $entries->append($entry);
+            if ($globalEntries) {
+                $globalEntries->append($entry);
+            }
         }
         return $entries;
     }

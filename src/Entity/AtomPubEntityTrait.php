@@ -6,7 +6,7 @@ namespace App\Entity;
  * Class AtomPubEntity
  * @package App\Entity
  */
-abstract class  AtomPubEntity
+trait AtomPubEntityTrait
 {
     /** @var string */
     protected $id;
@@ -18,6 +18,8 @@ abstract class  AtomPubEntity
     protected $updated;
     /** @var array */
     protected $author = [];
+    /** @var Link */
+    protected $alternateLink;
 
     /**
      * AtomPubEntityTrait constructor.
@@ -27,7 +29,7 @@ abstract class  AtomPubEntity
      * @param \DateTimeInterface $updated
      * @param array $author
      */
-    public function __construct(
+    public function setAtomPubEntityCommonInfo(
         string $id,
         string $title,
         ?array $author,
@@ -40,6 +42,16 @@ abstract class  AtomPubEntity
         $this->title = $title;
         $this->updated = $updated;
         $this->author = $author;
+
+        foreach ($links ?? [] as $link) {
+            foreach ($link->getRels() as $relation) {
+                switch ($relation) {
+                    case Link::ALTERNATE:
+                        $this->alternateLink = $link;
+                        break;
+                }
+            }
+        }
     }
 
     /**
@@ -61,10 +73,16 @@ abstract class  AtomPubEntity
     /**
      * @return \DateTimeInterface
      */
-    public function getUpdated(): \DateTimeInterface
+    public function getUpdated(): ?\DateTimeInterface
     {
         return $this->updated;
     }
 
-
+    /**
+     * @return Link
+     */
+    public function getAlternateLink(): Link
+    {
+        return $this->alternateLink;
+    }
 }

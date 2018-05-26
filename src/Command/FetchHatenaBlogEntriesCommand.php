@@ -51,7 +51,7 @@ class FetchHatenaBlogEntriesCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        foreach ($this->remoteRepository->getEntries() as $entry) {
+        foreach ($this->remoteRepository->getEntriesAll() as $entry) {
             $this->localRepository->save($entry);
         }
     }

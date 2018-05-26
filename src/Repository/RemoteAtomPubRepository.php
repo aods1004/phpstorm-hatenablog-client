@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\Encoder\AtomPubEntryXmlEncoder;
 use App\Entity\Entries;
 use App\Entity\Entry;
 use App\Entity\Feed;
@@ -48,20 +49,23 @@ class RemoteAtomPubRepository implements AtomPubRepositoryInterface
     /**
      * @return Entries
      */
+    public function getEntriesAll(): Entries
+    {
+        $this->loadAll();
+        return $this->entries;
+    }
+
+    /**
+     * @return Entries
+     */
     public function loadAll(): Entries
     {
         $feed = $this->fetchFeed($this->firstFeedUri);
-        return $this->entries;
-        while($nextLink = $feed->getNextLink()) {
+        while ($nextLink = $feed->getNextLink()) {
             $feed = $this->fetchFeed($nextLink->getHref());
         }
 
         return $this->entries;
-    }
-
-    public function updateEntry(Entry $entry)
-    {
-
     }
 
     /**
@@ -72,19 +76,36 @@ class RemoteAtomPubRepository implements AtomPubRepositoryInterface
     {
         /** @var Feed $feed */
         $feed = $this->serializer->deserialize(
-            $this->client->get($uri)->getBody()->getContents(), Feed::class, 'xml');
-        foreach ($feed->getEntries() as $entry) {
-            $this->entries->append($entry);
-        }
+            $this->client->get($uri)->getBody()->getContents(), Feed::class, 'xml',
+            ['global_entries' => $this->entries]);
         return $feed;
     }
 
+
+
     /**
-     * @return Entries
+     * @param Entry $entry
+     * @return Entry|null
      */
-    public function getEntries(): Entries
+    public function fetchRemoteEntry(Entry $entry): Entry
     {
-        $this->loadAll();
-        return $this->entries;
+        /** @var Entry $entry */
+        $entry = $this->serializer->deserialize(
+            $this->client->get($entry->getEditLink()->getHref())->getBody()->getContents(), Entry::class, 'xml');
+        return $entry;
+    }
+
+    /**
+     * @param Entry $entry
+     * @return Entry
+     */
+    public function save(Entry $entry)
+    {
+        $xml = $this->serializer->serialize($entry, AtomPubEntryXmlEncoder::ENTRY_XML);
+        /** @var Entry $result */
+        $result = $this->serializer->deserialize(
+            $this->client->put($entry->getEditLink()->getHref(), ['body' => $xml])->getBody()->getContents(),
+            Entry::class, 'xml');
+        return $result;
     }
 }

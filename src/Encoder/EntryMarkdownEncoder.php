@@ -3,12 +3,17 @@
 namespace App\Encoder;
 
 use App\Twig\Meta;
-use App\Twig\ReversibleTemplate;
 use Symfony\Component\Serializer\Encoder\DecoderInterface;
 use Symfony\Component\Serializer\Encoder\EncoderInterface;
 
-class LocalFileEntryEncoder implements EncoderInterface,DecoderInterface
+/**
+ * Class LocalFileEntryEncoder
+ * @package App\Encoder
+ */
+class EntryMarkdownEncoder implements EncoderInterface,DecoderInterface
 {
+    use AtomPubEncoderTrait;
+
     const CONTENT_MARKDOWN = 'content_md';
 
     protected $twig;
@@ -36,21 +41,15 @@ class LocalFileEntryEncoder implements EncoderInterface,DecoderInterface
     {
         $meta = new Meta();
         $twig = new \Twig_Environment(new \Twig_Loader_Array(['content' => $data]), ['autoescape' => false]);
-        $twig->setExtensions([new ReversibleTemplate(), $meta]);
+        $twig->setExtensions([$meta]);
         $content = $twig->render('content', []);
         $data = $meta->getMeta();
-
         return [
-            'content' => [
-                '#' => $content,
-            ],
-            'category' => array_map(function ($data) {
-                return ['#' => '', '@term' => $data];
-            }, $data['category'] ?? []),
+            'title' => $data['title'] ?? '',
+            'content' => ['#' => $content,],
+            'category' => $this->convertTermListToCategory($data['category']),
             'updated' => $data['updated'],
-            'control' => [
-                'app:draft' => $data['draft'],
-            ]
+            'app:control' => ['app:draft' => $data['draft'],]
         ];
     }
 
@@ -75,11 +74,13 @@ class LocalFileEntryEncoder implements EncoderInterface,DecoderInterface
     public function encode($data, $format, array $context = [])
     {
         return  $this->twig->render('content.md.twig', [
+            'url' => $this->findLinkByRel('alternate', $data['link'] ?? []),
+            'content_type' => $data['content']['@type'],
             'title' => $data['title'] ?? '',
             'updated' => $data['updated'] ?? '',
-            'category' => array_map(function (array $value) {
-                return strval($value['@term'] ?? '');
-            }, $data['category'] ?? []),
+            'category' => $this->convertCategoryToTermList($data['category'] ?? []),
+            'content' => $data['content']['#'] ?? '',
+            'draft' => $data['app:control']['app:draft'] ?? '',
         ]);
     }
 

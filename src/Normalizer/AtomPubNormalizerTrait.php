@@ -50,6 +50,18 @@ trait AtomPubNormalizerTrait
         return $retVal;
     }
 
+    /**
+     * @param \DateTimeInterface|null $dateTime
+     * @param $format
+     * @return string|null
+     */
+    protected function normalizeDatetime(?\DateTimeInterface $dateTime, $format = DATE_ATOM)
+    {
+        if ($dateTime instanceof \DateTimeInterface) {
+            return $dateTime->format($format);
+        }
+        return null;
+    }
 
     /**
      * @param $entry
@@ -58,14 +70,14 @@ trait AtomPubNormalizerTrait
     public function denormalizeAtomEntry($entry)
     {
         return new Entry(
-            $entry['id'] ?? '',
-            $entry['title'] ?? '',
+            $entry['id'],
+            $entry['title'],
             $entry['author'] ?? [],
             $this->denormalizeAtomSummary($entry['summary'] ?? []),
             $this->denormalizeAtomContent($entry['content'] ?? []),
-            $this->denormalizeAtomDatetime($entry['updated'] ?? ''),
-            $this->denormalizeAtomDatetime($entry['published'] ?? ''),
-            $this->denormalizeAtomDatetime($entry['app:edited'] ?? ''),
+            \DateTimeImmutable::createFromFormat(DATE_ATOM,$entry['updated']),
+            \DateTimeImmutable::createFromFormat(DATE_ATOM, $entry['published']),
+            \DateTimeImmutable::createFromFormat(DATE_ATOM, $entry['app:edited']),
             $this->denormalizeAtomLinks($entry['link'] ?? []),
             $this->denormalizeAtomCategory($entry['category'] ?? []),
             $entry['app:control'] ?? []
@@ -88,7 +100,7 @@ trait AtomPubNormalizerTrait
      */
     private function denormalizeAtomContent($content)
     {
-        return new Content(new ContentType($content['@type'] ?? ''), $content['#'] ?? '');
+        return new Content(new ContentType($content['@type'] ?? ''), trim($content['#'] ?? ''));
     }
 
     /**
@@ -121,14 +133,5 @@ trait AtomPubNormalizerTrait
             $categories->append(new Category($value['@term'] ?? ''));
         }
         return $categories;
-    }
-
-    /**
-     * @param string|null $value
-     * @return \DateTimeImmutable|null
-     */
-    private function denormalizeAtomDatetime(?string $value)
-    {
-        return $value ? \DateTimeImmutable::createFromFormat(\DateTimeImmutable::ATOM, $value) : null;
     }
 }

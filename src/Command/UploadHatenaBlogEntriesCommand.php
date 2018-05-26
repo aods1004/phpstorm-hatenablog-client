@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Command;
 
+use App\Entity\Link;
 use App\Repository\LocalAtomPubRepository;
 use App\Repository\RemoteAtomPubRepository;
 use Symfony\Component\Console\Command\Command;
@@ -54,8 +55,19 @@ class UploadHatenaBlogEntriesCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        foreach ($this->localRepository->findEditedEntry() as $entry) {
-            $this->remoteRepository->updateEntry($entry);
+        foreach ($this->localRepository->findLocalUpdatedEntry() as $localEntry) {
+            $currentRemoteEntry = $this->remoteRepository->fetchRemoteEntry($localEntry);
+            if ($currentRemoteEntry->getEdited() > $localEntry->getEdited()) {
+                echo "SKIP: {$currentRemoteEntry->getTitle()} "
+                    . "REMOTE EDITED : {$currentRemoteEntry->getEdited()->format(DATE_ATOM)}"
+                    . "> LOCAL EDITED : {$localEntry->getEdited()->format(DATE_ATOM)}" . PHP_EOL;
+                continue;
+            }
+            $resultEntry = $this->remoteRepository->save($localEntry);
+            foreach ($resultEntry->getLinks()->getLinksByRel(Link::ALTERNATE) as $link) {
+                echo "UPDATE: {$resultEntry->getTitle()} " . strval($link->getHref()) . PHP_EOL;
+            }
+            $this->localRepository->save($resultEntry);
         }
     }
 }

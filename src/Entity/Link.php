@@ -13,7 +13,10 @@ use Psr\Link\LinkInterface;
  */
 class Link implements LinkInterface
 {
-    const RELATION_NEXT = 'next';
+    const NEXT = 'next';
+    const EDIT = 'edit';
+    const ALTERNATE = 'alternate';
+
     /** @var string[] */
     private $relations;
     /** @var UriInterface */

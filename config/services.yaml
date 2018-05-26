@@ -1,5 +1,3 @@
-# Put parameters here that don't need to change on each machine where the app is deployed
-# https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
     app.hatena_blog_api_first_feed_uri: '%env(HATENA_BLOG_API_FIRST_FEED_URI)%'
     app.hatena_blog_entry_local_dir: '%kernel.project_dir%/../entries'
@@ -23,6 +21,12 @@ services:
             - '@app.repository.remote'
             - '@app.repository.local'
 
+    app.update_hatena_blog_entries:
+        class: App\Command\UploadHatenaBlogEntriesCommand
+        arguments:
+            - '@app.repository.remote'
+            - '@app.repository.local'
+
     app.serializer.atom_pub_serializer:
         class: Symfony\Component\Serializer\Serializer
         arguments:
@@ -32,7 +36,8 @@ services:
           -
             - '@serializer.encoder.xml'
             - '@serializer.encoder.json'
-            - '@app.encoder.local_file_entry_encoder'
+            - '@app.encoder.entry_markdown_encoder'
+            - '@app.encoder.atom_pub_entry_xml_encoder'
 
     app.normalizer.atom_pub_feed_denormalizer:
         class: App\Normalizer\AtomPubFeedDenormalizer
@@ -40,8 +45,13 @@ services:
     app.normalizer.atom_pub_entry_normalizer:
         class: App\Normalizer\AtomPubEntryNormalizer
 
-    app.encoder.local_file_entry_encoder:
-        class: App\Encoder\LocalFileEntryEncoder
+    app.encoder.entry_markdown_encoder:
+        class: App\Encoder\EntryMarkdownEncoder
+        arguments:
+          - '@twig'
+
+    app.encoder.atom_pub_entry_xml_encoder:
+        class: App\Encoder\AtomPubEntryXmlEncoder
         arguments:
           - '@twig'
 
