@@ -2,7 +2,7 @@
 
 namespace App\Encoder;
 
-use App\Twig\Meta;
+use App\Twig\AppExtension;
 use Symfony\Component\Serializer\Encoder\DecoderInterface;
 use Symfony\Component\Serializer\Encoder\EncoderInterface;
 
@@ -15,17 +15,20 @@ class EntryMarkdownEncoder implements EncoderInterface,DecoderInterface
     use AtomPubEncoderTrait;
 
     const CONTENT_MARKDOWN = 'content_md';
-
+    /** @var \Twig_Environment  */
     protected $twig;
+    /** @var string */
+    protected $templateDirPath;
 
     /**
-     * LocalFileEntryEncoder constructor.
-     *
+     * EntryMarkdownEncoder constructor.
      * @param \Twig_Environment $twig
+     * @param string $templateDirPath
      */
-    public function __construct(\Twig_Environment $twig)
+    public function __construct(\Twig_Environment $twig, string $templateDirPath = '')
     {
         $this->twig = $twig;
+        $this->templateDirPath = $templateDirPath;
     }
 
     /**
@@ -39,11 +42,11 @@ class EntryMarkdownEncoder implements EncoderInterface,DecoderInterface
      */
     public function decode($data, $format, array $context = array())
     {
-        $meta = new Meta();
+        $appExtension = new AppExtension($this->templateDirPath);
         $twig = new \Twig_Environment(new \Twig_Loader_Array(['content' => $data]), ['autoescape' => false]);
-        $twig->setExtensions([$meta]);
+        $twig->setExtensions([$appExtension]);
         $content = $twig->render('content', []);
-        $data = $meta->getMeta();
+        $data = $appExtension->getMeta();
         return [
             'title' => $data['title'] ?? '',
             'content' => ['#' => $content,],

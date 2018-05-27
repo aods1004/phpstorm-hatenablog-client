@@ -59,11 +59,11 @@ class UploadHatenaBlogEntriesCommand extends Command
             if ($currentRemoteEntry->getEdited() > $localEntry->getEdited()) {
                 echo "SKIP: {$currentRemoteEntry->getTitle()} "
                     . "REMOTE EDITED : {$currentRemoteEntry->getEdited()->format(DATE_ATOM)}"
-                    . "> LOCAL EDITED : {$localEntry->getEdited()->format(DATE_ATOM)}" . PHP_EOL;
+                    . " > LOCAL EDITED : {$localEntry->getEdited()->format(DATE_ATOM)}" . PHP_EOL;
                 continue;
             }
             $resultEntry = $this->remoteRepository->save($localEntry);
-            echo "UPDATE: {$resultEntry->getTitle()} " . $resultEntry->getAlternateLink()->getHref() . PHP_EOL;
+            echo "UPDATE: {$resultEntry->getTitle()} " . $resultEntry->getAlternateEditLink()->getHref() . PHP_EOL;
             $this->localRepository->save($resultEntry);
         }
     }

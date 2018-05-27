@@ -78,7 +78,7 @@ class LocalAtomPubRepository implements AtomPubRepositoryInterface
             /** @type Entry $fileEntry */
             $fileEntry = $this->serializer->deserialize(
                 $file->getContents(), Entry::class, EntryMarkdownEncoder::CONTENT_MARKDOWN,
-                ['remote_entry' => $remoteEntry, 'edited' => date(DATE_ATOM, $file->getCTime())]);
+                ['remote_entry' => $remoteEntry, 'edited' => date(DATE_ATOM, $file->getMTime())]);
 
             if ($fileEntry->getHash() !== $remoteEntry->getHash()) {
                 $entries->append($fileEntry);
@@ -125,8 +125,7 @@ class LocalAtomPubRepository implements AtomPubRepositoryInterface
     private function createSaveDirPath(Entry $entry)
     {
         return $this->createPublicDirPath()
-            . DIRECTORY_SEPARATOR . $entry->getPublished()->format('YmdHis')
-            . '_' . $entry->getEntryId();
+            . DIRECTORY_SEPARATOR . $entry->getEntryId();
     }
 
     /**

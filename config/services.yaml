@@ -1,7 +1,9 @@
 parameters:
     app.hatena_blog_api_first_feed_uri: '%env(HATENA_BLOG_API_FIRST_FEED_URI)%'
     app.hatena_blog_entry_id_prefix: '%env(HATENA_BLOG_ENTRY_ID_PREFIX)%'
+    app.hatena_blog_entry_edit_html: '%env(HATENA_BLOG_EDIT_HTML)%'
     app.hatena_blog_entry_local_dir: '%kernel.project_dir%/../entries'
+    app.hatena_blog_template_dir: '%kernel.project_dir%/../templates'
 
 services:
 
@@ -14,7 +16,11 @@ services:
 
     App\:
         resource: '../src/*'
-        exclude: '../src/{Entity,Tests,Kernel.php}'
+        exclude: '../src/{Entity,Tests,Kernel.php,Twig}'
+
+    App\Twig\AppExtension:
+        arguments:
+            - '%app.hatena_blog_template_dir%'
 
     app.fetch_hatena_blog_entries:
         class: App\Command\FetchHatenaBlogEntriesCommand
@@ -49,11 +55,13 @@ services:
         class: App\Normalizer\AtomPubEntryNormalizer
         arguments:
           - '%app.hatena_blog_entry_id_prefix%'
+          - '%app.hatena_blog_entry_edit_html%'
 
     app.encoder.entry_markdown_encoder:
         class: App\Encoder\EntryMarkdownEncoder
         arguments:
           - '@twig'
+          - '%app.hatena_blog_template_dir%'
 
     app.encoder.atom_pub_entry_xml_encoder:
         class: App\Encoder\AtomPubEntryXmlEncoder

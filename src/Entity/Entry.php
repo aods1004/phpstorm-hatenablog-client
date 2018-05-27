@@ -29,6 +29,8 @@ class Entry implements AtomPubEntityInterface
     protected $editLink;
     /** @var Link */
     protected $alternateLink;
+    /** @var Link */
+    protected $alternateEditLink;
     /** @var string */
     protected $entryIdPrefix;
     /**
@@ -71,6 +73,9 @@ class Entry implements AtomPubEntityInterface
                 switch ($relation) {
                     case Link::EDIT:
                         $this->editLink = $link;
+                        break;
+                    case Link::ALTERNATE_EDIT:
+                        $this->alternateEditLink = $link;
                         break;
                     case Link::ALTERNATE:
                         $this->alternateLink = $link;
@@ -191,5 +196,11 @@ class Entry implements AtomPubEntityInterface
     {
         return $this->alternateLink;
     }
-
+    /**
+     * @return Link
+     */
+    public function getAlternateEditLink(): Link
+    {
+        return $this->alternateEditLink;
+    }
 }

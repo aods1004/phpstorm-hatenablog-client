@@ -15,6 +15,7 @@ class Link implements LinkInterface
 {
     const NEXT = 'next';
     const EDIT = 'edit';
+    const ALTERNATE_EDIT = 'alternate_edit';
     const ALTERNATE = 'alternate';
 
     /** @var string[] */

@@ -3,7 +3,7 @@
 namespace App\Normalizer;
 
 use App\Entity\{
-    Entry, EntryId
+    Entry, EntryId, Link
 };
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
@@ -12,20 +12,26 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
  * Class AtomPubEntryNormalizer
  * @package App\Component\Serializer\Normalizer
  */
-class AtomPubEntryNormalizer implements NormalizerInterface,DenormalizerInterface
+class AtomPubEntryNormalizer implements NormalizerInterface, DenormalizerInterface
 {
     use AtomPubNormalizerTrait;
 
     /** @var string */
     protected $entryIdPrefix;
+    /** @var string */
+    protected $hatenaBlogEntryEditLink;
 
     /**
      * AtomPubEntryNormalizer constructor.
-     * @param $entryIdPrefix
+     * @param string $entryIdPrefix
+     * @param string $hatenaBlogEntryEditLink
      */
-    public function __construct(string $entryIdPrefix = '')
+    public function __construct(string $entryIdPrefix = '', string $hatenaBlogEntryEditLink = '')
     {
         $this->entryIdPrefix = $entryIdPrefix;
+        $this->hatenaBlogEntryEditLink = $hatenaBlogEntryEditLink;
+
+
     }
 
     /**
@@ -33,8 +39,9 @@ class AtomPubEntryNormalizer implements NormalizerInterface,DenormalizerInterfac
      */
     public function supportsNormalization($data, $format = null)
     {
-        return is_a($data,Entry::class);
+        return is_a($data, Entry::class);
     }
+
     /**
      * {@inheritdoc}
      */
@@ -56,8 +63,8 @@ class AtomPubEntryNormalizer implements NormalizerInterface,DenormalizerInterfac
             'id' => strval($object->getId()),
             'title' => $object->getTitle(),
             'content' => array_filter([
-                '#' => (string) $object->getContent()->getValue(),
-                '@type' => (string) $object->getContent()->getType(),
+                '#' => (string)$object->getContent()->getValue(),
+                '@type' => (string)$object->getContent()->getType(),
             ]),
             'updated' => $this->normalizeDatetime($object->getUpdated()),
             'published' => $this->normalizeDatetime($object->getPublished()),
@@ -88,24 +95,46 @@ class AtomPubEntryNormalizer implements NormalizerInterface,DenormalizerInterfac
         }
         return $this->denormalizeAtomEntry($data);
     }
+
     /**
      * @param $entry
      * @return Entry
      */
-    public function denormalizeAtomEntry($entry)
+    protected function denormalizeAtomEntry($entry)
     {
+        $entryId = new EntryId($entry['id'], $this->entryIdPrefix);
         return new Entry(
-            new EntryId($entry['id'], $this->entryIdPrefix),
+            $entryId,
             $entry['title'],
             $entry['author'] ?? [],
             $this->denormalizeAtomSummary($entry['summary'] ?? []),
             $this->denormalizeAtomContent($entry['content'] ?? []),
-            \DateTimeImmutable::createFromFormat(DATE_ATOM,$entry['updated']),
+            \DateTimeImmutable::createFromFormat(DATE_ATOM, $entry['updated']),
             \DateTimeImmutable::createFromFormat(DATE_ATOM, $entry['published']),
             \DateTimeImmutable::createFromFormat(DATE_ATOM, $entry['app:edited']),
-            $this->denormalizeAtomLinks($entry['link'] ?? []),
+            $this->denormalizeAtomLinks(
+                array_merge(
+                    $entry['link'] ?? [],
+                    $this->createEditAlternateLink($entryId)
+                )
+            ),
             $this->denormalizeAtomCategory($entry['category'] ?? []),
             $entry['app:control'] ?? []
         );
+    }
+
+    /**
+     * @param EntryId $entryId
+     * @return array
+     */
+    protected function createEditAlternateLink(EntryId $entryId)
+    {
+        return [
+            [
+                '@rel' => [Link::ALTERNATE_EDIT],
+                '@href' => $this->hatenaBlogEntryEditLink . '?entry=' . $entryId->getEntryId(),
+                '@type' => 'html',
+            ]
+        ];
     }
 }
